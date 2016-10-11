@@ -1,4 +1,3 @@
-
 class SoundCanvas {
  public:
   SoundCanvas();
@@ -11,12 +10,20 @@ class SoundCanvas {
   virtual void pause(int streamID);
   virtual void stop(int streamID);
   virtual void resume(int streamID);
-  virtual void setPriority(int streamID, int priority);
   virtual void setVolume(int streamID, float leftVolume, float rightVolume);
 
  protected:
   float leftVolume;
   float rightVolume;
 
+ private:
+};
+
+class SoundCanvasFactory {
+ public:
+  SoundCanvasFactory() { }
+  virtual ~SoundCanvasFactory() { }
+
+  virtual std::shared_ptr<SoundCanvas> createCanvas() = 0;
  private:
 };

@@ -1,14 +1,13 @@
-
 #include <jni.h>
 #include "SoundCanvas.h"
 
 class AndroidSoundCanvas : public SoundCanvas {
  public:
-  AndroidSound(JNIEnv * _env){
+  AndroidSoundCanvas(JNIEnv * _env){
     _env->GetJavaVM(&javaVM);
   }
 
-  ~AndroidSound(){
+  ~AndroidSoundCanvas(){
     JNIEnv * env = getJNIEnv();
     if (initDone){
       env->DeleteGlobalRef(soundPoolClass);
@@ -25,7 +24,6 @@ class AndroidSoundCanvas : public SoundCanvas {
      soundResumeMethod = env->GetMethodID(soundPoolClass, "resume", "(I)V");
      soundStopMethod = env->GetMethodID(soundPoolClass, "stop", "(I)V");
      soundSetVolumeMethod = env->GetMethodID(soundPoolClass, "setVolume", "(IFF)V");
-     soundSetPriorityMethod = env->GetMethodID(soundPoolClass, "setPriority", "(I)I");
      soundReleaseMethod = env->GetMethodID(soundPoolClass, "release", "()V");
 
      initDone = true;
@@ -71,10 +69,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPoolClass, soundReleaseMethod);
   }
-  void setPriority(int streamID, int priority){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPoolClass, soundSetPriorityMethod, streamID, priority);
-  }
+
   void setVolume(int streamID, float leftVolume, float rightVolume){
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPoolClass, soundSetVolumeMethod, streamID, leftVolume, rightVolume);
@@ -88,9 +83,20 @@ class AndroidSoundCanvas : public SoundCanvas {
   jmethodID soundResumeMethod;
   jmethodID soundStopMethod;
   jmethodID soundSetVolumeMethod;
-  jmethodID soundSetPriorityMethod;
   jmethodID soundReleaseMethod;
   bool initDone = false;
+  int priority = 1;
   JavaVM * javaVM;
 };
 
+class AndroidSoundCanvasFactory : public SoundCanvasFactory  {
+ public:
+  AndroidSoundCanvasFactory(JNIEnv * _env) : env(_env) { }
+  ~AndroidSoundCanvasFactory() { }
+
+  std::shared_ptr<SoundCanvas> createCanvas() {
+    return std::make_shared < AndroidSoundCanvas > (env);
+  }
+ private:
+  JNIEnv * env;
+};
