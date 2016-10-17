@@ -106,15 +106,3 @@ class AndroidSoundCanvas : public SoundCanvas {
   int priority = 1;
   JavaVM * javaVM;
 };
-
-class AndroidSoundCanvasFactory : public SoundCanvasFactory  {
- public:
-  AndroidSoundCanvasFactory(JNIEnv * _env, jobject _mgr) : SoundCanvasFactory(), env(_env), mgr(_mgr) { }
-
-  std::shared_ptr<SoundCanvas> createCanvas() override {
-    return std::make_shared<AndroidSoundCanvas>(env, mgr);
-  }
- private:
-  JNIEnv * env;
-  jobject mgr;
-};
