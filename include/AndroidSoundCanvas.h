@@ -9,8 +9,8 @@ class AndroidSoundCanvas : public SoundCanvas {
     _env->GetJavaVM(&javaVM);
     assetManager = _assetManager;
     _env->NewGlobalRef(assetManager);
-    leftVolume = 0.99f;
-    rightVolume = 0.99f;
+    leftVolume = 1.0f;
+    rightVolume = 1.0f;
     androidInit();
   }
 
@@ -18,6 +18,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     JNIEnv * env = getJNIEnv();
     if (initDone){
       env->DeleteGlobalRef(soundPoolClass);
+      env->DeleteGlobalRef(assetManager);
     }
   }
   
@@ -87,7 +88,7 @@ class AndroidSoundCanvas : public SoundCanvas {
 
   void setVolume(int streamID, float leftVolume, float rightVolume){
     JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume, rightVolume);
+    env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
   }
 
  private:
