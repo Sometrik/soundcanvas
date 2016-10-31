@@ -48,7 +48,7 @@ class AndroidSoundCanvas : public SoundCanvas {
   }
 
   //returns SoundID
-  int loadSound(std::string filename) {
+  int loadSound(const std::string & filename) {
     JNIEnv * env = getJNIEnv();
     jstring jpath = env->NewStringUTF(filename.c_str());
     jobject file = env->CallObjectMethod(assetManager, managerOpenMethod, jpath);
@@ -64,7 +64,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     return streamID;
   }
 
-  int play(std::string filename){
+  int play(const std::string & filename){
     int soundID = 0;
     auto it = loadedSounds.find(filename); // look for the filename
     if (it != loadedSounds.end()) {
