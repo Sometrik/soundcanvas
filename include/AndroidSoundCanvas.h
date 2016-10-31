@@ -20,6 +20,43 @@ class AndroidSoundCanvas : public SoundCanvas {
     }
   }
   
+  int play(const std::string & filename) override {
+    auto it = loadedSounds.find(filename); // look for the filename
+    if (it != loadedSounds.end()) {
+      int soundID = it->second;
+      return playSample(soundID); // sound is already loaded, play it
+    } else {
+      int soundID = loadSound(filename);
+      return playSample(soundID);
+    }
+  }
+
+  void pause(int streamID) override {
+    JNIEnv * env = getJNIEnv();
+    env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
+  }
+
+  void stop(int streamID) override {
+    JNIEnv * env = getJNIEnv();
+    env->CallVoidMethod(soundPool, soundStopMethod, streamID);
+  }
+
+  void resume(int streamID) override {
+    JNIEnv * env = getJNIEnv();
+    env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
+  }
+
+  void release() {
+    JNIEnv * env = getJNIEnv();
+    env->CallVoidMethod(soundPool, soundReleaseMethod);
+  }
+
+  void setVolume(int streamID, float leftVolume, float rightVolume) override {
+    JNIEnv * env = getJNIEnv();
+    env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
+  }
+
+ protected:
   void androidInit() {
     JNIEnv * env = getJNIEnv();
      soundPoolClass =  (jclass)env->NewGlobalRef(env->FindClass("android/media/SoundPool"));
@@ -47,7 +84,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     return Myenv;
   }
 
-  //returns SoundID
+  // returns SoundID
   int loadSound(const std::string & filename) {
     JNIEnv * env = getJNIEnv();
     jstring jpath = env->NewStringUTF(filename.c_str());
@@ -56,48 +93,12 @@ class AndroidSoundCanvas : public SoundCanvas {
     loadedSounds[filename] = soundID;
     return soundID;
   }
-
+  
   //Returns StreamID
-  int play(int soundID){
+  int playSample(int soundID){
     JNIEnv * env = getJNIEnv();
     int streamID = env->CallIntMethod(soundPool, soundPlayMethod, soundID, leftVolume, rightVolume, 0, 0, 0.99);
     return streamID;
-  }
-
-  int play(const std::string & filename){
-    auto it = loadedSounds.find(filename); // look for the filename
-    if (it != loadedSounds.end()) {
-      int soundID = it->second;
-      return play(soundID); // sound is already loaded, play it
-    } else {
-      int soundID = loadSound(filename);
-      return play(soundID);
-    }
-  }
-
-  void pause(int streamID){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
-  }
-
-  void stop(int streamID){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundStopMethod, streamID);
-  }
-
-  void resume(int streamID){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
-  }
-
-  void release(){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundReleaseMethod);
-  }
-
-  void setVolume(int streamID, float leftVolume, float rightVolume){
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
   }
 
  private:
