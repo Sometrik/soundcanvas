@@ -19,8 +19,8 @@ class SoundCanvas {
   virtual void setVolume(int streamID, float leftVolume, float rightVolume) = 0;
 
  protected:
-  float leftVolume;
-  float rightVolume;
+  float leftVolume = 1.0f;
+  float rightVolume = 1.0f;
 
  private:
 };

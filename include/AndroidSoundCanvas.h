@@ -9,10 +9,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     _env->GetJavaVM(&javaVM);
     assetManager = _assetManager;
     _env->NewGlobalRef(assetManager);
-    leftVolume = 1.0f;
-    rightVolume = 1.0f;
     androidInit();
-
   }
 
   ~AndroidSoundCanvas(){
