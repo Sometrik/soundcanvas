@@ -65,16 +65,14 @@ class AndroidSoundCanvas : public SoundCanvas {
   }
 
   int play(const std::string & filename){
-    int soundID = 0;
     auto it = loadedSounds.find(filename); // look for the filename
     if (it != loadedSounds.end()) {
-      soundID = loadedSounds.at(filename);
-      play(soundID); // sound is already loaded, play it
+      int soundID = it->second;
+      return play(soundID); // sound is already loaded, play it
     } else {
-      soundID = loadSound(filename);
-      play(soundID);
+      int soundID = loadSound(filename);
+      return play(soundID);
     }
-    return soundID;
   }
 
   void pause(int streamID){
@@ -117,5 +115,5 @@ class AndroidSoundCanvas : public SoundCanvas {
   bool initDone = false;
   int priority = 1;
   JavaVM * javaVM;
-  std::map<std::string,int> loadedSounds;
+  std::map<std::string, int> loadedSounds;
 };
