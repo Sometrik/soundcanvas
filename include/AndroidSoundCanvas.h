@@ -1,6 +1,7 @@
 #include <jni.h>
 #include "SoundCanvas.h"
 #include <AndroidLogger.h>
+#include <map>
 
 
 class AndroidSoundCanvas : public SoundCanvas {
@@ -12,6 +13,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     leftVolume = 1.0f;
     rightVolume = 1.0f;
     androidInit();
+
   }
 
   ~AndroidSoundCanvas(){
@@ -51,11 +53,12 @@ class AndroidSoundCanvas : public SoundCanvas {
   }
 
   //returns SoundID
-  int loadSound(const char * filePath) {
+  int loadSound(std::string filename) {
     JNIEnv * env = getJNIEnv();
-    jstring jpath = env->NewStringUTF(filePath);
+    jstring jpath = env->NewStringUTF(filename.c_str());
     jobject file = env->CallObjectMethod(assetManager, managerOpenMethod, jpath);
     int soundID = env->CallIntMethod(soundPool, soundLoadMethod, file, 1);
+    loadedSounds[filename] = soundID;
     return soundID;
   }
 
@@ -64,6 +67,19 @@ class AndroidSoundCanvas : public SoundCanvas {
     JNIEnv * env = getJNIEnv();
     int streamID = env->CallIntMethod(soundPool, soundPlayMethod, soundID, leftVolume, rightVolume, 0, 0, 0.99);
     return streamID;
+  }
+
+  int play(std::string filename){
+    int soundID = 0;
+    auto it = loadedSounds.find(filename); // look for the filename
+    if (it != loadedSounds.end()) {
+      soundID = loadedSounds.at(filename);
+      play(soundID); // sound is already loaded, play it
+    } else {
+      soundID = loadSound(filename);
+      play(soundID);
+    }
+    return soundID;
   }
 
   void pause(int streamID){
@@ -106,4 +122,5 @@ class AndroidSoundCanvas : public SoundCanvas {
   bool initDone = false;
   int priority = 1;
   JavaVM * javaVM;
+  std::map<std::string,int> loadedSounds;
 };
