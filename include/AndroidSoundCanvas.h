@@ -1,6 +1,5 @@
 #include <jni.h>
 #include "SoundCanvas.h"
-#include <AndroidLogger.h>
 #include <map>
 
 
@@ -26,7 +25,6 @@ class AndroidSoundCanvas : public SoundCanvas {
   
   void androidInit() {
     JNIEnv * env = getJNIEnv();
-    auto logger = AndroidLogger();
      soundPoolClass =  (jclass)env->NewGlobalRef(env->FindClass("android/media/SoundPool"));
      jmethodID soundPoolConstructor = env->GetMethodID(soundPoolClass, "<init>", "(III)V");
      soundPool = env->NewGlobalRef(env->NewObject(soundPoolClass, soundPoolConstructor, 10, 3, 0));
