@@ -30,19 +30,19 @@ class AndroidSoundCanvas : public SoundCanvas {
     }
   }
 
-  void pause(int streamID) {
+  void pause(int streamID) override {
     checkInit();
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
   }
 
-  void stop(int streamID) {
+  void stop(int streamID) override {
     checkInit();
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPool, soundStopMethod, streamID);
   }
 
-  void resume(int streamID) {
+  void resume(int streamID) override {
     checkInit();
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
@@ -54,7 +54,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     env->CallVoidMethod(soundPool, soundReleaseMethod);
   }
 
-  void setVolume(int streamID, float leftVolume, float rightVolume) {
+  void setVolume(int streamID, float leftVolume, float rightVolume) override {
     checkInit();
     JNIEnv * env = getJNIEnv();
     env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
