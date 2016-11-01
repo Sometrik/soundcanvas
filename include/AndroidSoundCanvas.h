@@ -2,7 +2,6 @@
 #include "SoundCanvas.h"
 #include <map>
 
-
 class AndroidSoundCanvas : public SoundCanvas {
  public:
   AndroidSoundCanvas(JNIEnv * _env, jobject _assetManager) : SoundCanvas(){
@@ -24,7 +23,7 @@ class AndroidSoundCanvas : public SoundCanvas {
       int soundID = it->second;
       return playSample(soundID); // sound is already loaded, play it
     } else {
-      int soundID = loadSound(filename);
+      int soundID = loadSample(filename);
       return playSample(soundID);
     }
   }
@@ -66,7 +65,7 @@ class AndroidSoundCanvas : public SoundCanvas {
 protected:
 
   // returns SoundID
-  int loadSound(const std::string & filename) {
+  int loadSample(const std::string & filename) {
     checkInit();
     JNIEnv * env = getJNIEnv();
     jstring jpath = env->NewStringUTF(filename.c_str());
@@ -76,7 +75,7 @@ protected:
     return soundID;
   }
 
-  //Returns StreamID
+  // Returns StreamID
   int playSample(int soundID) {
     checkInit();
     JNIEnv * env = getJNIEnv();
