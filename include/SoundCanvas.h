@@ -21,4 +21,15 @@ class SoundCanvas {
  private:
 };
 
+class DummySoundCanvas : public SoundCanvas {
+ public:
+  DummySoundCanvas() { }
+  
+  int play(const std::string & filename) { return 0; }
+  void pause(int streamID) { }
+  void stop(int streamID) { }
+  void resume(int streamID) { }
+  void setVolume(int streamID, float leftVolume, float rightVolume) { }
+};
+
 #endif
