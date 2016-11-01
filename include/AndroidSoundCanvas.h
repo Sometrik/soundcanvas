@@ -19,7 +19,6 @@ class AndroidSoundCanvas : public SoundCanvas {
     }
   }
   int play(const std::string & filename) override {
-    checkInit();
     auto it = loadedSounds.find(filename); // look for the filename
     if (it != loadedSounds.end()) {
       int soundID = it->second;
@@ -31,27 +30,31 @@ class AndroidSoundCanvas : public SoundCanvas {
   }
 
   void pause(int streamID) override {
-    checkInit();
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
+    if (initDone) {
+      JNIEnv * env = getJNIEnv();
+      env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
+    }
   }
 
   void stop(int streamID) override {
-    checkInit();
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundStopMethod, streamID);
+    if (initDone) {
+      JNIEnv * env = getJNIEnv();
+      env->CallVoidMethod(soundPool, soundStopMethod, streamID);
+    }
   }
 
   void resume(int streamID) override {
-    checkInit();
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
+    if (initDone) {
+      JNIEnv * env = getJNIEnv();
+      env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
+    }
   }
 
   void release() {
-    checkInit();
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundReleaseMethod);
+    if (initDone) {
+      JNIEnv * env = getJNIEnv();
+      env->CallVoidMethod(soundPool, soundReleaseMethod);
+    }
   }
 
   void setVolume(int streamID, float leftVolume, float rightVolume) override {
@@ -113,8 +116,6 @@ protected:
     javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
     return Myenv;
   }
-
-  
 
  private:
   jclass soundPoolClass;
