@@ -4,13 +4,13 @@
 
 class AndroidSoundCanvas : public SoundCanvas {
  public:
-  AndroidSoundCanvas(JNIEnv * _env, jobject _assetManager) : SoundCanvas(){
+  AndroidSoundCanvas(JNIEnv * _env, jobject _assetManager) {
     _env->GetJavaVM(&javaVM);
     assetManager = _assetManager;
     _env->NewGlobalRef(assetManager);
   }
 
-  ~AndroidSoundCanvas(){
+  ~AndroidSoundCanvas() {
     JNIEnv * env = getJNIEnv();
     if (initDone) {
       env->DeleteGlobalRef(soundPoolClass);
