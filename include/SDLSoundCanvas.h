@@ -37,6 +37,7 @@ class SDLSoundCanvas : public SoundCanvas {
 
 protected:
   Mix_Chunk * loadSample(const std::string & filename) {
+    std::cerr << "loading " << filename << std::endl;
     checkInit();
     return (loadedSounds[filename] = Mix_LoadWAV(filename.c_str()));
   }
