@@ -23,6 +23,7 @@ class AndroidSoundCanvas : public SoundCanvas {
     soundStopMethod = env->GetMethodID(soundPoolClass, "stop", "(I)V");
     soundSetVolumeMethod = env->GetMethodID(soundPoolClass, "setVolume", "(IFF)V");
     soundReleaseMethod = env->GetMethodID(soundPoolClass, "release", "()V");
+    env->DeleteLocalRef(assetManagerClass);
     env->ExceptionCheck();   
   }
 
@@ -76,6 +77,8 @@ protected:
     jobject file = env->CallObjectMethod(assetManager, managerOpenMethod, jpath);
     int soundID = env->CallIntMethod(soundPool, soundLoadMethod, file, 1);
     loadedSounds[filename] = soundID;
+    env->DeleteLocalRef(file);
+    env->DeleteLocalRef(jpath);
     return soundID;
   }
 
