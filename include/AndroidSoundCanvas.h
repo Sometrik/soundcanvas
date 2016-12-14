@@ -12,8 +12,7 @@ class AndroidSoundCache {
 
     JNIEnv * env = getJNIEnv();
     soundPoolClass =  (jclass)env->NewGlobalRef(env->FindClass("android/media/SoundPool"));
-    jmethodID soundPoolConstructor = env->GetMethodID(soundPoolClass, "<init>", "(III)V");
-    soundPool = env->NewGlobalRef(env->NewObject(soundPoolClass, soundPoolConstructor, 10, 3, 0));
+    soundPoolConstructor = env->GetMethodID(soundPoolClass, "<init>", "(III)V");
 
     jclass assetManagerClass = env->FindClass("android/content/res/AssetManager");
 
@@ -31,13 +30,17 @@ class AndroidSoundCache {
   ~AndroidSoundCache(){
 
   }
-  private:
+
+  jobject getAssetManager(){ return assetManager; }
+
+
 
   JNIEnv * getJNIEnv() {
     JNIEnv *Myenv = NULL;
     javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
     return Myenv;
   }
+
 
   jclass soundPoolClass;
   jmethodID soundLoadMethod;
@@ -48,41 +51,25 @@ class AndroidSoundCache {
   jmethodID soundSetVolumeMethod;
   jmethodID soundReleaseMethod;
   jmethodID managerOpenMethod;
-  jobject soundPool;
+  jmethodID soundPoolConstructor;
   jobject assetManager;
-  JavaVM * javaVM = 0;
 
+
+  private:
+  JavaVM * javaVM = 0;
 };
 
 class AndroidSoundCanvas : public SoundCanvas {
  public:
-  AndroidSoundCanvas(JNIEnv * _env, jobject _assetManager) {
-    _env->GetJavaVM(&javaVM);
-    assetManager = _env->NewGlobalRef(_assetManager);
-
-    JNIEnv * env = getJNIEnv();
-    soundPoolClass =  (jclass)env->NewGlobalRef(env->FindClass("android/media/SoundPool"));
-    jmethodID soundPoolConstructor = env->GetMethodID(soundPoolClass, "<init>", "(III)V");
-    soundPool = env->NewGlobalRef(env->NewObject(soundPoolClass, soundPoolConstructor, 10, 3, 0));
-    
-    jclass assetManagerClass = env->FindClass("android/content/res/AssetManager");
-    
-    managerOpenMethod = env->GetMethodID(assetManagerClass, "openFd", "(Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;");
-    soundLoadMethod = env->GetMethodID(soundPoolClass, "load", "(Landroid/content/res/AssetFileDescriptor;I)I");
-    soundPlayMethod = env->GetMethodID(soundPoolClass, "play", "(IFFIIF)I");
-    soundPauseMethod = env->GetMethodID(soundPoolClass, "pause", "(I)V");
-    soundResumeMethod = env->GetMethodID(soundPoolClass, "resume", "(I)V");
-    soundStopMethod = env->GetMethodID(soundPoolClass, "stop", "(I)V");
-    soundSetVolumeMethod = env->GetMethodID(soundPoolClass, "setVolume", "(IFF)V");
-    soundReleaseMethod = env->GetMethodID(soundPoolClass, "release", "()V");
-    env->DeleteLocalRef(assetManagerClass);
-    env->ExceptionCheck();   
+  AndroidSoundCanvas(AndroidSoundCache * _cache) {
+    cache = _cache;
+    JNIEnv * env = cache->getJNIEnv();
+    soundPool = env->NewGlobalRef(env->NewObject(cache->soundPoolClass, cache->soundPoolConstructor, 10, 3, 0));
   }
 
   ~AndroidSoundCanvas() {
-    JNIEnv * env = getJNIEnv();
-    env->DeleteGlobalRef(soundPoolClass);
-    env->DeleteGlobalRef(assetManager);
+    JNIEnv * env = cache->getJNIEnv();
+    env->DeleteGlobalRef(cache->soundPoolClass);
   }
   int play(const std::string & filename) override {
     auto it = loadedSounds.find(filename); // look for the filename
@@ -96,38 +83,38 @@ class AndroidSoundCanvas : public SoundCanvas {
   }
 
   void pause(int streamID) override {
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundPauseMethod, streamID);
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(soundPool, cache->soundPauseMethod, streamID);
   }
 
   void stop(int streamID) override {
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundStopMethod, streamID);
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(soundPool, cache->soundStopMethod, streamID);
   }
 
   void resume(int streamID) override {
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundResumeMethod, streamID);
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(soundPool, cache->soundResumeMethod, streamID);
   }
 
   void release() {
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundReleaseMethod);
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(soundPool, cache->soundReleaseMethod);
   }
 
   void setVolume(int streamID, float leftVolume, float rightVolume) override {
-    JNIEnv * env = getJNIEnv();
-    env->CallVoidMethod(soundPool, soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(soundPool, cache->soundSetVolumeMethod, streamID, leftVolume * 0.99f, rightVolume * 0.99f);
   }
 
 protected:
 
   // returns SoundID
   int loadSample(const std::string & filename) {
-    JNIEnv * env = getJNIEnv();
+    JNIEnv * env = cache->getJNIEnv();
     jstring jpath = env->NewStringUTF(filename.c_str());
-    jobject file = env->CallObjectMethod(assetManager, managerOpenMethod, jpath);
-    int soundID = env->CallIntMethod(soundPool, soundLoadMethod, file, 1);
+    jobject file = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, jpath);
+    int soundID = env->CallIntMethod(soundPool, cache->soundLoadMethod, file, 1);
     loadedSounds[filename] = soundID;
     env->DeleteLocalRef(file);
     env->DeleteLocalRef(jpath);
@@ -136,30 +123,13 @@ protected:
 
   // Returns StreamID
   int playSample(int soundID) {
-    JNIEnv * env = getJNIEnv();
-    int streamID = env->CallIntMethod(soundPool, soundPlayMethod, soundID, leftVolume, rightVolume, 0, 0, 0.99);
+    JNIEnv * env = cache->getJNIEnv();
+    int streamID = env->CallIntMethod(soundPool, cache->soundPlayMethod, soundID, leftVolume, rightVolume, 0, 0, 0.99);
     return streamID;
   }
 
-  JNIEnv * getJNIEnv() {
-    JNIEnv *Myenv = NULL;
-    javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
-    return Myenv;
-  }
-
  private:
-  jclass soundPoolClass;
-  jmethodID soundLoadMethod;
-  jmethodID soundPlayMethod;
-  jmethodID soundPauseMethod;
-  jmethodID soundResumeMethod;
-  jmethodID soundStopMethod;
-  jmethodID soundSetVolumeMethod;
-  jmethodID soundReleaseMethod;
-  jmethodID managerOpenMethod;
-  jobject soundPool;
-  jobject assetManager;
-  int priority = 1;
-  JavaVM * javaVM;
+  AndroidSoundCache * cache;
   std::map<std::string, int> loadedSounds;
+  jobject soundPool;
 };
