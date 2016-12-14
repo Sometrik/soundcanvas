@@ -2,6 +2,58 @@
 #include "SoundCanvas.h"
 #include <map>
 
+class AndroidSoundCache {
+  public:
+
+  AndroidSoundCache(JNIEnv * _env, jobject _assetManager) {
+    _env->GetJavaVM(&javaVM);
+
+    assetManager = _env->NewGlobalRef(_assetManager);
+
+    JNIEnv * env = getJNIEnv();
+    soundPoolClass =  (jclass)env->NewGlobalRef(env->FindClass("android/media/SoundPool"));
+    jmethodID soundPoolConstructor = env->GetMethodID(soundPoolClass, "<init>", "(III)V");
+    soundPool = env->NewGlobalRef(env->NewObject(soundPoolClass, soundPoolConstructor, 10, 3, 0));
+
+    jclass assetManagerClass = env->FindClass("android/content/res/AssetManager");
+
+    managerOpenMethod = env->GetMethodID(assetManagerClass, "openFd", "(Ljava/lang/String;)Landroid/content/res/AssetFileDescriptor;");
+    soundLoadMethod = env->GetMethodID(soundPoolClass, "load", "(Landroid/content/res/AssetFileDescriptor;I)I");
+    soundPlayMethod = env->GetMethodID(soundPoolClass, "play", "(IFFIIF)I");
+    soundPauseMethod = env->GetMethodID(soundPoolClass, "pause", "(I)V");
+    soundResumeMethod = env->GetMethodID(soundPoolClass, "resume", "(I)V");
+    soundStopMethod = env->GetMethodID(soundPoolClass, "stop", "(I)V");
+    soundSetVolumeMethod = env->GetMethodID(soundPoolClass, "setVolume", "(IFF)V");
+    soundReleaseMethod = env->GetMethodID(soundPoolClass, "release", "()V");
+    env->DeleteLocalRef(assetManagerClass);
+    env->ExceptionCheck();
+  }
+  ~AndroidSoundCache(){
+
+  }
+  private:
+
+  JNIEnv * getJNIEnv() {
+    JNIEnv *Myenv = NULL;
+    javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
+    return Myenv;
+  }
+
+  jclass soundPoolClass;
+  jmethodID soundLoadMethod;
+  jmethodID soundPlayMethod;
+  jmethodID soundPauseMethod;
+  jmethodID soundResumeMethod;
+  jmethodID soundStopMethod;
+  jmethodID soundSetVolumeMethod;
+  jmethodID soundReleaseMethod;
+  jmethodID managerOpenMethod;
+  jobject soundPool;
+  jobject assetManager;
+  JavaVM * javaVM = 0;
+
+};
+
 class AndroidSoundCanvas : public SoundCanvas {
  public:
   AndroidSoundCanvas(JNIEnv * _env, jobject _assetManager) {
