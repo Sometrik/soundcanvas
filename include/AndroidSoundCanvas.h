@@ -61,7 +61,7 @@ class AndroidSoundCache {
 
 class AndroidSoundCanvas : public SoundCanvas {
  public:
-  AndroidSoundCanvas(AndroidSoundCache * _cache) {
+  AndroidSoundCanvas(const std::shared_ptr<AndroidSoundCache> & _cache) {
     cache = _cache;
     JNIEnv * env = cache->getJNIEnv();
     soundPool = env->NewGlobalRef(env->NewObject(cache->soundPoolClass, cache->soundPoolConstructor, 10, 3, 0));
@@ -129,7 +129,7 @@ protected:
   }
 
  private:
-  AndroidSoundCache * cache;
+  std::shared_ptr<AndroidSoundCache> cache;
   std::map<std::string, int> loadedSounds;
   jobject soundPool;
 };
